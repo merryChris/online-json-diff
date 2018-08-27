@@ -119,10 +119,46 @@
   }
 
   BackboneEvents.mixin(JsonInputView.prototype);
-  var currentDiff = localStorage.getItem('current-diff') && JSON.parse(localStorage.getItem('current-diff'));
 
-  var leftInputView = new JsonInputView(document.getElementById('json-diff-left'), currentDiff && currentDiff.left);
-  var rightInputView = new JsonInputView(document.getElementById('json-diff-right'), currentDiff && currentDiff.right);
+  var uri = new URI();
+  var search = uri.search(true);
+
+  var left = undefined;
+  var right = undefined;
+
+  $.ajax({
+      async: false,
+      type: 'GET',
+      url: 'diff_result/' + decodeURIComponent(search.offline),
+      dataType: 'text',
+      success: function (data) {
+          left = data;
+      },
+      fail: function (data) {
+          alert('获取diff结果失败，请检查参数是否正确');
+      }
+  });
+
+  $.ajax({
+      async: false,
+      type: 'GET',
+      url: 'diff_result/' + decodeURIComponent(search.online),
+      dataType: 'text',
+      success: function (data) {
+          right = data;
+      },
+      fail: function (data) {
+          alert('获取diff结果失败，请检查参数是否正确');
+      }
+  });
+
+  var leftInputView = new JsonInputView(document.getElementById('json-diff-left'), left);
+  var rightInputView = new JsonInputView(document.getElementById('json-diff-right'), right);
+
+  // var currentDiff = localStorage.getItem('current-diff') && JSON.parse(localStorage.getItem('current-diff'));
+
+  // var leftInputView = new JsonInputView(document.getElementById('json-diff-left'), currentDiff && currentDiff.left);
+  // var rightInputView = new JsonInputView(document.getElementById('json-diff-right'), currentDiff && currentDiff.right);
   leftInputView.on('change', onInputChange);
   rightInputView.on('change', onInputChange);
   leftInputView.codemirror.on('scroll', function () {
@@ -134,7 +170,8 @@
     leftInputView.codemirror.scrollTo(scrollInfo.left, scrollInfo.top);
   });
 
-  if (currentDiff) {
+  // if (currentDiff) {
+  if (left && right) {
     compareJson();
   }
 
